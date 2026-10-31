@@ -21,6 +21,9 @@ SIMULATED_TODAY: date = date(2018, 9, 1)
 DB_PATH: Path = Path(os.getenv("SHOPOPS_DB", ROOT / "data" / "shopops.db"))
 CACHE_PATH: Path = Path(os.getenv("LLM_CACHE_DB", ROOT / ".cache" / "llm_cache.db"))
 POLICIES_DIR: Path = ROOT / "policies"
+POLICY_INDEX_PATH: Path = ROOT / "index" / "policy_index.npz"  # repoya girer (deploy için)
+TRACE_PATH: Path = Path(os.getenv("SHOPOPS_TRACE", ROOT / "logs" / "traces.jsonl"))
+ESCALATION_PATH: Path = ROOT / "logs" / "escalations.jsonl"
 
 # --- LLM [Ref: Genel Rehber Ek A; AI Studio Rate Limit ekranı, 15 Ekim 2026] --
 LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")  # gemini | groq | ollama

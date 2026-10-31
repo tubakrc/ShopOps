@@ -7,9 +7,9 @@ data/*
 *.db
 *.db.tmp
 
-# Önbellek ve indeksler
+# Önbellek ve log'lar (politika indeksi index/ repoya girer: deploy için)
 .cache/
-index/
+logs/
 __pycache__/
 .pytest_cache/
 *.pyc

@@ -72,6 +72,17 @@ class LLMResponse:
     latency_s: float = 0.0
     cache_hit: bool = False
     model: str = ""
+    # Asistan mesajındaki tool_calls, sağlayıcının döndürdüğü hâliyle (None alanlar atılmış).
+    # Konuşmaya aynen geri eklenir: Gemini 3 modelleri tool_calls içindeki ek alanları
+    # (thought signature) bir sonraki istekte geri bekler.
+    raw_tool_calls: list[dict[str, Any]] = field(default_factory=list)
+
+    def assistant_message(self) -> dict[str, Any]:
+        """Konuşma geçmişine eklenecek asistan mesajı."""
+        msg: dict[str, Any] = {"role": "assistant", "content": self.content or ""}
+        if self.raw_tool_calls:
+            msg["tool_calls"] = self.raw_tool_calls
+        return msg
 
     @property
     def total_tokens(self) -> int:
@@ -197,6 +208,14 @@ def _openai_transport(provider: str) -> Transport:
     return call
 
 
+def _drop_none(obj: Any) -> Any:
+    if isinstance(obj, dict):
+        return {k: _drop_none(v) for k, v in obj.items() if v is not None}
+    if isinstance(obj, list):
+        return [_drop_none(v) for v in obj]
+    return obj
+
+
 def _parse_response(raw: dict[str, Any]) -> tuple[Optional[str], list[ToolCall], int, int]:
     message = raw["choices"][0]["message"]
     calls: list[ToolCall] = []
@@ -298,9 +317,10 @@ class LLMClient:
 
     def _to_response(self, raw: dict[str, Any], latency: float, cache_hit: bool) -> LLMResponse:
         content, calls, p_tok, c_tok = _parse_response(raw)
+        raw_calls = _drop_none(raw["choices"][0]["message"].get("tool_calls") or [])
         return LLMResponse(content=content, tool_calls=calls, prompt_tokens=p_tok,
                            completion_tokens=c_tok, latency_s=round(latency, 3),
-                           cache_hit=cache_hit, model=self.model)
+                           cache_hit=cache_hit, model=self.model, raw_tool_calls=raw_calls)
 
     def _log(self, key: str, resp: LLMResponse) -> None:
         # G6: içerik yok; yalnız ölçüm alanları ve anahtarın kısa hash'i.

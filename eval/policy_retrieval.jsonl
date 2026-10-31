@@ -1,0 +1,15 @@
+{"query": "Ürün kırık geldi, ne yapabilirim?", "expected_doc": "04_hasarli_yanlis_urun.md"}
+{"query": "hasarlı ürün", "expected_doc": "04_hasarli_yanlis_urun.md"}
+{"query": "Bana yanlış renk ürün gönderildi", "expected_doc": "04_hasarli_yanlis_urun.md"}
+{"query": "Beğenmedim, kaç gün içinde iade edebilirim?", "expected_doc": "01_iade_politikasi.md"}
+{"query": "İade talebim reddedildi, tekrar açabilir miyim?", "expected_doc": "01_iade_politikasi.md"}
+{"query": "Siparişim hazırlanıyor, iptal etmek istiyorum", "expected_doc": "02_iptal_politikasi.md"}
+{"query": "Kargoya verilen siparişi iptal edebilir miyim?", "expected_doc": "02_iptal_politikasi.md"}
+{"query": "Paket çok geç geldi, kargo ücretimi geri alabilir miyim?", "expected_doc": "03_kargo_ve_gecikme.md"}
+{"query": "Tahmini teslim tarihi geçti", "expected_doc": "03_kargo_ve_gecikme.md"}
+{"query": "Hediye çekiyle ödedim, para nereye iade edilir?", "expected_doc": "05_odeme_ve_geri_odeme.md"}
+{"query": "Para iadesi hangi karta yapılır?", "expected_doc": "05_odeme_ve_geri_odeme.md"}
+{"query": "Satıcı ürünü geç kargoladı", "expected_doc": "06_satici_kaynakli_gecikme.md"}
+{"query": "Eşimin siparişine bakabilir misin?", "expected_doc": "07_hesap_gizlilik_ve_destek.md"}
+{"query": "Bir insanla konuşmak istiyorum", "expected_doc": "07_hesap_gizlilik_ve_destek.md"}
+{"query": "500 reali aşan iade nasıl onaylanır?", "expected_doc": "05_odeme_ve_geri_odeme.md"}

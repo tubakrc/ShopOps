@@ -1,12 +1,11 @@
-# Şu an kullanılanlar
 python-dotenv>=1.0
-openai>=1.40        # Gemini/Groq/Ollama'nın OpenAI uyumlu endpoint'leri için
+openai>=1.40              # Gemini/Groq/Ollama'nın OpenAI uyumlu endpoint'leri
+pydantic>=2.6             # tool argüman şemaları ve doğrulama
+numpy>=1.26               # politika indeksi (kosinüs benzerliği)
+sentence-transformers>=3.0  # intfloat/multilingual-e5-small
 kagglehub>=0.3
 pytest>=8.0
 
-# Sonraki adımlarda eklenecek (framework kararından sonra sabitlenecek):
-# smolagents
-# mcp[ws]<2          # smolagents/LangGraph ile zorunlu [Ref: Genel Rehber Ek A]
-# sqlglot            # G3 SQL doğrulayıcı
-# chromadb
-# sentence-transformers   # intfloat/multilingual-e5-small
+# Hedef seviyede eklenecek:
+# sqlglot                 # G3 SQL doğrulayıcı
+# streamlit
