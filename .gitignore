@@ -1,0 +1,16 @@
+# Sırlar
+.env
+
+# Veri: ham CSV ve türetilmiş DB repoya girmez (CC BY-NC-SA 4.0) [Ref: ShopOps §3]
+data/*
+!data/.gitkeep
+*.db
+*.db.tmp
+
+# Önbellek ve indeksler
+.cache/
+index/
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
