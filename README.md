@@ -2,7 +2,7 @@
 
 Müşterinin "siparişim nerede / iade edebilir miyim" sorusunu kurallara uygun ve yetkili biçimde cevaplayan, operasyon ekibinin metrik sorularını tanımlı metriklerden SQL üreterek yanıtlayan bir agent sistemi.
 
-> **Durum:** M0, iskelet + veri katmanı. Demo linki, teknik yazı linki, mimari diyagram ve eval tablosu ilerleyen kilometre taşlarında eklenecek.
+> **Durum:** Veri katmanı ve kural motoru (R0–R13) tamam. Demo linki, teknik yazı linki, mimari diyagram ve eval tablosu ilerleyen kilometre taşlarında eklenecek.
 
 ## Problem ve hedef kullanıcı
 
@@ -43,20 +43,20 @@ Bu iddia baseline ölçümüyle (B0 tool'suz LLM, B1 naif RAG, B2 ham şema SQL)
 
 ## Kurulum
 
-Gereksinim: Python 3.11+ (SQL doğrulayıcıdaki `SQLITE_LIMIT_ATTACHED` için).
+Gereksinim: Python 3.12 ve [uv](https://docs.astral.sh/uv/).
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env            # GEMINI_API_KEY'i doldur
+uv sync
+cp .env.example .env            # GEMINI_API_KEY'i doldur (Windows: copy .env.example .env)
 
-python scripts/download_data.py                                   # yolu yazdırır
-python scripts/load_sqlite.py --src <yukarıdaki_yol> --db data/shopops.db
-python scripts/smoke.py --db data/shopops.db --src <yukarıdaki_yol>
-pytest -q
+uv run python scripts/download_data.py                            # yolu yazdırır
+uv run python scripts/load_sqlite.py --src <yukarıdaki_yol> --db data/shopops.db
+uv run python scripts/smoke.py --db data/shopops.db --src <yukarıdaki_yol>
+uv run python scripts/verify_rules.py --db data/shopops.db
+uv run pytest -q
 ```
 
-`smoke.py` hem ham CSV satır sayılarını hem de kural/metrik kontrol değerlerini (R0 sonrası 99.421 sipariş, late_delivery_rate 0,0672, R6 penceresi 3.656 sipariş vb.) belgeyle karşılaştırır.
+`smoke.py` ham CSV satır sayılarını ve veri kontrol değerlerini (R0 sonrası 99.421 sipariş, late_delivery_rate 0,0672, R6 penceresi 3.656 sipariş vb.) belgeyle karşılaştırır. `verify_rules.py` kural motorunu 99.421 siparişin tamamında çalıştırır ve §9.1'deki kontrol değerlerini (130 / 352, R9 dağılımı 33 / 28 / 2.195) doğrular.
 
 ## Teknoloji seçimleri
 
@@ -79,9 +79,11 @@ pytest -q
 ```
 config.py              SIMULATED_TODAY, model adları, iş kuralı eşikleri (tek kaynak)
 src/llm_client.py      önbellekli, hız sınırlı, sağlayıcıdan bağımsız LLM istemcisi
+src/returns.py         R0–R13 iade/iptal kural motoru (LLM'siz, deterministik)
 scripts/download_data.py
 scripts/load_sqlite.py CSV → SQLite, R0 dışlama, indeksler, boş return_requests
 scripts/smoke.py       belgedeki sayılarla karşılaştırma
+scripts/verify_rules.py kural motorunun tüm veride doğrulanması
 tests/                 birim testleri
 ```
 
