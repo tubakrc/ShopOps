@@ -1,0 +1,13 @@
+# ShopOps marka renkleri. Streamlit Cloud bu dosyayı repodan okur.
+[theme]
+base = "light"
+primaryColor = "#F94915"              # düğme, odak, gönder ikonu
+backgroundColor = "#F9F8F4"           # ana alan
+secondaryBackgroundColor = "#EFEDE6"  # sohbet kutusu, kod ve açılır bloklar
+textColor = "#2B2A26"                 # gövde metni (krem üstünde 13,5:1 kontrast)
+
+[theme.sidebar]
+backgroundColor = "#EFEDE6"           # #F9F8F4'ün bir ton koyusu
+secondaryBackgroundColor = "#E5E2D9"  # kenar çubuğundaki sipariş numarası kutuları
+textColor = "#2B2A26"
+primaryColor = "#F94915"

@@ -37,6 +37,38 @@ from src.tools.support import Session, ToolContext, commit_pending, reject_pendi
 
 st.set_page_config(page_title="ShopOps · Örnekpazar Destek", page_icon="🛍️", layout="wide")
 
+# Marka renkleri. Palet .streamlit/config.toml'da da var; ama o dosya yalnız sunucu açılırken ve
+# çalışma klasöründe bulunursa okunur, tarayıcıda seçili bir tema da onu ezebilir. Bu CSS her durumda
+# uygulanır: ana alan #F9F8F4, kenar çubuğu bir ton koyusu, tüm düğmeler dolu turuncu.
+BRAND_CSS = """
+<style>
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"],
+[data-testid="stBottom"], [data-testid="stBottomBlockContainer"] {
+  background-color: #F9F8F4 !important;
+}
+section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div,
+[data-testid="stSidebarContent"] {
+  background-color: #EFEDE6 !important;
+}
+.stApp, .stApp p, .stApp li, .stApp label, .stApp h1, .stApp h2, .stApp h3,
+[data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
+  color: #2B2A26;
+}
+.stButton > button, [data-testid^="stBaseButton"] {
+  background-color: #F94915 !important; color: #F9F8F4 !important;
+  border: 1px solid #F94915 !important; font-weight: 600;
+}
+.stButton > button:hover, [data-testid^="stBaseButton"]:hover {
+  background-color: #DE3D0D !important; border-color: #DE3D0D !important;
+}
+.stButton > button p, [data-testid^="stBaseButton"] p { color: inherit !important; }
+section[data-testid="stSidebar"] .stButton > button,
+section[data-testid="stSidebar"] .stButton > button p { color: #EFEDE6 !important; }
+[data-testid="stChatInputSubmitButton"] { background-color: #F94915 !important; color: #F9F8F4 !important; }
+</style>
+"""
+st.markdown(BRAND_CSS, unsafe_allow_html=True)
+
 REASON_TR = {"changed_mind": "fikir değişikliği", "damaged": "hasarlı ürün",
              "wrong_item": "yanlış ürün", "late": "geç teslim"}
 STATUS_TR = {"delivered": "teslim edildi", "shipped": "kargoda", "canceled": "iptal",

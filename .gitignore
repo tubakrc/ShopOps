@@ -14,3 +14,6 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .venv/
+
+# Streamlit yerel sırları (tema dosyası config.toml repoya girer)
+.streamlit/secrets.toml
