@@ -84,19 +84,9 @@ uv run python eval/run_eval.py                          # B0 / B1 / Final eval t
 
 ## Mimari (Temel seviye)
 
-```
-Kullanıcı ─▶ CLI (oturum = customer_unique_id) ─▶ Support Agent (Gemini, tool-calling döngüsü)
-                                                     │  max 8 adım · aynı çağrı ≤ 2
-                                                     ▼
-                         ┌──────────── Tool katmanı (kimlik oturumdan, Pydantic doğrulama) ────────────┐
-                         │ list_customer_orders · get_order_status        → SQLite (mode=ro)          │
-                         │ check_return_eligibility                       → returns.py (R0–R13)        │
-                         │ search_policies                                → politika indeksi (e5)      │
-                         │ escalate_to_human                              → iç kuyruk (log)            │
-                         │ create_return_request → APPROVAL_REQUIRED (yazmaz)                          │
-                         └─────────────────────────────────────────────────────────────────────────────┘
-CLI "Onaylıyor musunuz? [e/h]" ─▶ commit_pending() ─▶ kuralları yeniden uygula ─▶ return_requests (tek yazma)
-```
+![ShopOps mimarisi: LLM'in serbest olduğu yer, kodla kilitli katman ve insan onayı](docs/architecture.png)
+
+*Mavi: LLM'in serbest olduğu yer (niyet, tool sırası, cevap). Yeşil: kodla kilitli, deterministik ve birim testli katman (kimlik, kural motoru, veri). Turuncu: insan onayı; kalıcı kaydın tek yolu. Kaynak dosya: [`docs/architecture.svg`](docs/architecture.svg).*
 
 ### Tool'lar
 
@@ -201,6 +191,7 @@ cli.py                 müşteri destek CLI'ı ("Onaylıyor musunuz? [e/h]")
 app.py                 Streamlit arayüzü (onay kartı, ara adımlar)
 src/scenarios.py       sipariş seçicileri (golden set ve demo ortak)
 src/bootstrap.py       deploy'da veriyi indirip DB'yi kurar
+docs/architecture.svg  mimari diyagram (PNG: docs/architecture.png)
 docs/error_analysis.md hata analizi
 docs/answers.md        Genel Rehber §6 ve ShopOps §10 yazılı cevapları
 scripts/download_data.py

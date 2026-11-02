@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="800" viewBox="0 0 1400 800" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <style>
+      .t { font-size: 17px; font-weight: 700; fill: #0f172a; }
+      .s { font-size: 13px; fill: #334155; }
+      .m { font-size: 13px; fill: #0f172a; font-family: 'JetBrains Mono', Consolas, 'DejaVu Sans Mono', monospace; }
+      .lbl { font-size: 12px; fill: #475569; }
+      .lblO { font-size: 12px; fill: #c2410c; font-weight: 600; }
+      .tag { font-size: 11px; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="800" fill="#ffffff"/>
+
+  <!-- Başlık -->
+  <text x="40" y="44" font-size="24" font-weight="700" fill="#0f172a">ShopOps · Mimari</text>
+  <text x="40" y="70" class="s">LLM dili anlar ve tool seçer; kimlik, karar, tutar ve yazma kodda. Kalıcı kayıt yalnız insan onayıyla.</text>
+
+  <!-- 1. Kullanıcı -->
+  <rect x="40" y="110" width="230" height="100" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="60" y="142" class="t">Müşteri</text>
+  <text x="60" y="166" class="s">Streamlit arayüzü / CLI</text>
+  <text x="60" y="188" class="s">serbest Türkçe soru</text>
+
+  <!-- Oturum -->
+  <rect x="40" y="360" width="230" height="100" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="60" y="392" class="t">Oturum</text>
+  <text x="60" y="414" class="m">customer_unique_id</text>
+  <text x="60" y="438" class="s">kimlik LLM'den gelmez</text>
+
+  <!-- 2. Agent -->
+  <rect x="330" y="110" width="330" height="220" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="350" y="142" class="t">Support Agent</text>
+  <text x="350" y="164" class="s">Gemini 3.5 Flash Lite · tool-calling döngüsü</text>
+  <text x="350" y="198" class="s">• Serbest: niyet, tool sırası, cevap metni</text>
+  <text x="350" y="222" class="s">• En fazla 8 adım, aynı çağrı ≤ 2</text>
+  <text x="350" y="246" class="s">• Önbellek + hız sınırı (15 istek/dk)</text>
+  <text x="350" y="270" class="s">• Sistem prompt'u: kapsam, kaynak, ret</text>
+  <text x="350" y="304" class="tag">framework yok · ~100 satır · birim testli</text>
+
+  <!-- Kullanıcı ↔ Agent -->
+  <line x1="270" y1="150" x2="328" y2="150" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="328" y1="180" x2="272" y2="180" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="276" y="142" class="lbl">soru</text>
+  <text x="276" y="198" class="lbl">cevap</text>
+
+  <!-- 3. Tool katmanı -->
+  <rect x="720" y="110" width="330" height="360" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="740" y="142" class="t">Tool katmanı</text>
+  <text x="740" y="164" class="s">kimlik oturumdan · Pydantic doğrulama</text>
+
+  <rect x="740" y="182" width="290" height="36" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="752" y="205" class="m">list_customer_orders</text><text x="985" y="205" class="tag">okuma</text>
+  <rect x="740" y="226" width="290" height="36" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="752" y="249" class="m">get_order_status</text><text x="985" y="249" class="tag">okuma</text>
+  <rect x="740" y="270" width="290" height="36" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="752" y="293" class="m">check_return_eligibility</text><text x="985" y="293" class="tag">okuma</text>
+  <rect x="740" y="314" width="290" height="36" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="752" y="337" class="m">search_policies</text><text x="985" y="337" class="tag">okuma</text>
+  <rect x="740" y="358" width="290" height="36" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="752" y="381" class="m">escalate_to_human</text><text x="968" y="381" class="tag">iç kuyruk</text>
+  <rect x="740" y="402" width="290" height="50" rx="6" fill="#fff7ed" stroke="#fb923c"/>
+  <text x="752" y="423" class="m">create_return_request</text>
+  <text x="752" y="442" class="lblO">yazmaz → APPROVAL_REQUIRED</text>
+
+  <!-- Agent ↔ Tool -->
+  <line x1="660" y1="200" x2="718" y2="200" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="718" y1="250" x2="662" y2="250" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="664" y="192" class="lbl">çağrı</text>
+  <text x="664" y="268" class="lbl">JSON</text>
+
+  <!-- Oturum → Tool -->
+  <line x1="270" y1="410" x2="718" y2="410" stroke="#059669" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arr)"/>
+  <text x="420" y="402" class="lbl">kimlik her SQL sorgusuna eklenir</text>
+
+  <!-- 4. Veri ve kurallar -->
+  <rect x="1110" y="110" width="250" height="80" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="1130" y="140" class="t">SQLite (salt okunur)</text>
+  <text x="1130" y="164" class="s">Olist · 99.421 sipariş</text>
+
+  <rect x="1110" y="210" width="250" height="80" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="1130" y="240" class="t">Kural motoru R0–R13</text>
+  <text x="1130" y="264" class="s"><tspan class="m">returns.py</tspan> · LLM'siz, testli</text>
+
+  <rect x="1110" y="310" width="250" height="80" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="1130" y="340" class="t">Politika indeksi</text>
+  <text x="1130" y="364" class="s">7 doküman · 30 bölüm · e5-small</text>
+
+  <rect x="1110" y="410" width="250" height="60" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="1130" y="436" class="t">Log'lar</text>
+  <text x="1130" y="456" class="s">trace · eskalasyon · PII'siz</text>
+
+  <line x1="1050" y1="150" x2="1108" y2="150" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="1050" y1="250" x2="1108" y2="250" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="1050" y1="350" x2="1108" y2="350" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="1050" y1="440" x2="1108" y2="440" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- 5. HITL bandı -->
+  <rect x="40" y="520" width="1320" height="170" rx="12" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="60" y="550" class="t" fill="#9a3412">İnsan onayı (HITL): kalıcı kaydın tek yolu</text>
+
+  <rect x="70" y="580" width="260" height="84" rx="8" fill="#ffffff" stroke="#fb923c"/>
+  <text x="88" y="610" class="t">Müşteri</text>
+  <text x="88" y="634" class="s">"Onayla" ya da "Vazgeç"</text>
+
+  <rect x="400" y="580" width="260" height="84" rx="8" fill="#ffffff" stroke="#fb923c"/>
+  <text x="418" y="610" class="t">Onay kartı</text>
+  <text x="418" y="634" class="s">tutar · gerekçe · onay kuyruğu</text>
+  <text x="418" y="654" class="tag">kart açıkken sohbet kilitli</text>
+
+  <rect x="730" y="580" width="290" height="84" rx="8" fill="#ffffff" stroke="#fb923c"/>
+  <text x="748" y="610" class="m" font-weight="700">commit_pending()</text>
+  <text x="748" y="634" class="s">LLM'in tool listesinde yok</text>
+  <text x="748" y="654" class="s">kurallar yazma anında yeniden</text>
+
+  <rect x="1090" y="580" width="250" height="84" rx="8" fill="#ffffff" stroke="#fb923c"/>
+  <text x="1108" y="610" class="m" font-weight="700">return_requests</text>
+  <text x="1108" y="634" class="s">tek yazma hedefi</text>
+  <text x="1108" y="654" class="s">PENDING_REVIEW / _SENIOR</text>
+
+  <!-- teklif: create_return_request → onay kartı -->
+  <path d="M 885 452 L 885 500 L 530 500 L 530 578" fill="none" stroke="#c2410c" stroke-width="1.8" marker-end="url(#arrO)"/>
+  <text x="560" y="494" class="lblO">teklif (tutar kural motorundan)</text>
+
+  <line x1="330" y1="622" x2="398" y2="622" stroke="#c2410c" stroke-width="1.8" marker-end="url(#arrO)"/>
+  <text x="340" y="614" class="lblO">onay</text>
+  <line x1="660" y1="622" x2="728" y2="622" stroke="#c2410c" stroke-width="1.8" marker-end="url(#arrO)"/>
+  <line x1="1020" y1="622" x2="1088" y2="622" stroke="#c2410c" stroke-width="1.8" marker-end="url(#arrO)"/>
+  <text x="1028" y="614" class="lblO">yaz</text>
+
+  <!-- Gösterge -->
+  <rect x="40" y="722" width="18" height="18" rx="4" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="66" y="736" class="s">LLM'in serbest olduğu yer</text>
+  <rect x="270" y="722" width="18" height="18" rx="4" fill="#ecfdf5" stroke="#059669"/>
+  <text x="296" y="736" class="s">Kodla kilitli: deterministik, birim testli</text>
+  <rect x="580" y="722" width="18" height="18" rx="4" fill="#fff7ed" stroke="#fb923c"/>
+  <text x="606" y="736" class="s">İnsan onayı</text>
+  <text x="40" y="772" class="tag">Kurgusal senaryo (Örnekpazar) · veri: Olist Brazilian E-Commerce, CC BY-NC-SA 4.0 · simüle tarih 2018-09-01</text>
+</svg>
