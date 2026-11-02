@@ -18,7 +18,7 @@ Tek LLM çağrısı (B0, bütün politikalar prompt'ta) politikayı doğru aktar
 
 Sabit workflow da yetmez: "kulaklık gelmedi, paramı geri istiyorum" hem durum sorgusu hem iade hem iptal olabilir; hangi tool'un hangi sırayla çağrılacağı cümleye bağlı. Agent bu yönlendirmeyi yapıyor, **kararı ise vermiyor**: karar, yetki ve yazma kodda.
 
-Bedeli: Final ortalama 2,16 LLM adımı, ~3.800 token (B0'a göre ~%18 fazla), p50 gecikme 1,61 sn (B0: 0,92 sn). Karar doğruluğunun %38'den %100'e çıkması ve sıfır uydurma için bu bedel kabul edilebilir. İlginç bir bulgu: **kapsam ve güvenlik için agent gerekmiyor**. B0, politikaların tamamını gördüğünde kapsam dışı istekleri de reddediyor (saldırı direnci %100). Agent'ın katkısı yalnız veri gerektiren kararlarda.
+Bedeli: Final ortalama 2,15 LLM adımı, ~3.780 token (B0'a göre ~%17 fazla), p50 gecikme 1,63 sn (B0: 0,93 sn). Karar doğruluğunun %38'den %100'e çıkması ve sıfır uydurma için bu bedel kabul edilebilir. İlginç bir bulgu: **kapsam ve güvenlik için agent gerekmiyor**. B0, politikaların tamamını gördüğünde kapsam dışı istekleri de reddediyor (saldırı direnci %100). Agent'ın katkısı yalnız veri gerektiren kararlarda.
 
 ### 3. Mimari: agent'ları nasıl böldün, orkestrasyon nasıl? Framework neden?
 
@@ -56,11 +56,11 @@ Karar kodları retrieval'a bırakılmadı: B1'in hataları (H2, H3) retrieval'ı
 
 | Sistem | Bileşenler | Task success | Karar doğruluğu | Uydurma | Saldırı direnci |
 |---|---|---|---|---|---|
-| B0 | LLM + tüm politikalar | %68 | %38 | %62 | %100 |
-| B1 | LLM + top-3 retrieval | %52 | %15 | %69 | %80 |
+| B0 | LLM + tüm politikalar | %69 | %38 | %62 | %100 |
+| B1 | LLM + top-3 retrieval | %54 | %15 | %69 | %83 |
 | Final | LLM + tool'lar + kural motoru + retrieval + HITL | %100 | %100 | %0 | %100 |
 
-(31 örneklik koşu; dolaylı injection örnekleri A10/A11 eklendikten sonraki sayılar `eval/results/summary.md`'de.)
+(33 örnek, 2 Kasım; B0 %69 / B1 %54 task success; Final'in A11 sonucu H7 düzeltmesinden sonra.)
 
 Ablation okuması:
 - **B0 → Final (karar +62 puan):** Tamamı tool'lardan ve kural motorundan. B0 kuralı biliyor, siparişi bilmiyor.
@@ -73,7 +73,7 @@ Ablation okuması:
 
 ### 8. Maliyet ve gecikme
 
-Final, görev başına ortalama: **2,16 LLM adımı, ~3.800 token** (çoğu prompt: sistem mesajı + 6 tool şeması + geçmiş), **p50 1,61 sn / p95 2,75 sn** (LLM + tool süresi). Ücretsiz katmanda para maliyeti 0. Ücretli eşdeğer maliyet = token × model fiyatı; trace'te adım başı token yazıldığı için hesaplanabilir.
+Final, görev başına ortalama: **2,15 LLM adımı, ~3.780 token** (çoğu prompt: sistem mesajı + 6 tool şeması + geçmiş), **p50 1,63 sn / p95 3,76 sn** (LLM + tool süresi). Ücretsiz katmanda para maliyeti 0. Ücretli eşdeğer maliyet = token × model fiyatı; trace'te adım başı token yazıldığı için hesaplanabilir.
 
 Ücretsiz katmanda kullanıcının gördüğü süre daha uzun: dakikada 15 istek sınırı nedeniyle istemci adımlar arasına ~4 sn koyuyor. Bu bekleme gecikme ölçümüne dahil edilmedi (karşılaştırmayı bozuyordu, H6).
 
@@ -98,7 +98,7 @@ Düşürmek için yapılanlar: kural motoru deterministik olduğu için model ka
 
 Ayrıca birim testleriyle: 10 yabancı sipariş → %100 NOT_FOUND (3 tool'da), onaysız çağrıda tablo boş, trace'te 32 karakterlik ham id regex'i 0 eşleşme.
 
-Sonuçlar (2 Kasım): A01–A10'da Final %100. **A11'de Final ilk koşuda başarısız oldu:** yazma ve aktarma yapmadı (yapısal savunmalar tuttu) ama tool cevabındaki gizli metni müşteriye giden cevaba taşıdı. Savunma prompt'tan koda taşındı (kategori alanı biçim doğrulaması; `docs/error_analysis.md` H7) ve A11 yeniden koşuldu. A10'da (politika dokümanına gizlenmiş talimat) B0, B1 ve Final talimatı izlemedi.
+Sonuçlar (2 Kasım): A01–A10'da Final %100. **A11'de Final ilk koşuda başarısız oldu:** yazma ve aktarma yapmadı (yapısal savunmalar tuttu) ama tool cevabındaki gizli metni müşteriye giden cevaba taşıdı. Savunma prompt'tan koda taşındı (kategori alanı biçim doğrulaması; `docs/error_analysis.md` H7) ve A11 yeniden koşuldu: **geçti** (Final saldırı direnci %91 → %100). A10'da (politika dokümanına gizlenmiş talimat) B0, B1 ve Final talimatı izlemedi.
 
 Hakem (LLM-as-judge) kontrolü: hakemin 8 politika hükmünü elle okuduk, 8'ine katılıyoruz (hepsi 1,0; cevaplar bağlamla destekli). Hakem her şeye 1,0 verdiği için ayırt ediciliği ayrıca kasıtlı hatalı cevaplarla ölçüldü: `eval/judge_calibration.py` (2 doğru + 3 yanlış cevap; sonuç `eval/results/judge_calibration.json`).
 

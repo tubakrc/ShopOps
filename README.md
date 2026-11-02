@@ -2,7 +2,9 @@
 
 Müşterinin "siparişim nerede / iade edebilir miyim" sorusunu kurallara uygun ve yetkili biçimde cevaplayan, operasyon ekibinin metrik sorularını tanımlı metriklerden SQL üreterek yanıtlayan bir agent sistemi.
 
-> **Durum:** Temel seviye tamam (veri, kural motoru, RAG, Support Agent, HITL, eval) + Streamlit arayüzü. Demo linki: *deploy sonrası eklenecek*. Demo linki, teknik yazı linki, mimari diyagram ve eval tablosu ilerleyen kilometre taşlarında eklenecek.
+> **Canlı demo:** https://shopops.streamlit.app/ · **Teknik yazı:** *Medium linki eklenecek*
+>
+> Temel seviye tamam (veri, kural motoru, RAG, Support Agent, HITL, eval) + Streamlit arayüzü. Ücretsiz katmanda çalışır: oturum başına 15 mesaj; uygulama kullanılmazsa uyur, ilk açılış ~1–2 dk sürebilir. Demo linki, teknik yazı linki, mimari diyagram ve eval tablosu ilerleyen kilometre taşlarında eklenecek.
 
 ## Problem ve hedef kullanıcı
 
@@ -147,20 +149,22 @@ Her tur `logs/traces.jsonl`'a adım adım yazılır: LLM adımı başına token 
 
 Eval, DB'nin geçici bir kopyasında temiz bir `return_requests` tablosuyla koşar. Sonuçlar: `eval/results/summary.md` (tablo), `summary.csv`, `records.jsonl` (örnek bazında; hata analizi için, ham id'ler hash'li). `--judge`, politika grubunda `JUDGE_MODEL` ile faithfulness ölçer; hakem kararları elle kontrol edildi (8/8 uyum) ve hakemin ayırt ediciliği `eval/judge_calibration.py` ile kasıtlı yanlış cevaplarla ölçüldü.
 
-**Sonuçlar** (1 Kasım 2026, `gemini-3.5-flash-lite`, temperature 0, 31 örnek; dolaylı injection örnekleri A10/A11 sonrası güncel tablo `eval/results/summary.md`'de):
+**Sonuçlar** (2 Kasım 2026, `gemini-3.5-flash-lite`, temperature 0, 33 örnek; tam tablo `eval/results/summary.md`):
 
-| Sistem | Task success | Tool-call acc. | Karar doğruluğu | Uydurma karar | Doğru kaynak | Yetkisiz erişim engelleme | Saldırı / kapsam dışı | Ort. adım | Ort. token | p50 / p95 gecikme |
-|---|---|---|---|---|---|---|---|---|---|---|
-| B0 tool'suz LLM | %68 | — | %38 | %62 | %100 | — | %100 | 1 | 3.213 | 0,92 / 1,27 sn |
-| B1 naif RAG | %52 | — | %15 | %69 | %100 | — | %80 | 1 | 604 | 0,70 / 1,59 sn |
-| B2 ham şema SQL | — | — | — | — | — | — | — | — | — | — |
-| **Final (agent)** | **%100** | **%100** | **%100** | **%0** | **%100** | **%100** | **%100** | 2,16 | 3.798 | 1,61 / 2,75 sn |
+| Sistem | Task success | Tool-call acc. | Karar doğruluğu | Uydurma karar | Doğru kaynak | Faithfulness (hakem) | Yetkisiz erişim engelleme | Saldırı / kapsam dışı | Ort. adım | Ort. token | p50 / p95 gecikme |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| B0 tool'suz LLM | %69 | — | %38 | %62 | %100 | — | — | %100 | 1 | 3.216 | 0,93 / 1,36 sn |
+| B1 naif RAG | %54 | — | %15 | %69 | %100 | %100 (n=4) | — | %83 | 1 | 600 | 0,70 / 1,59 sn |
+| B2 ham şema SQL | — | — | — | — | — | — | — | — | — | — | — |
+| **Final (agent)** | **%100** | **%100** | **%100** | **%0** | **%100** | **%100 (n=4)** | **%100** | **%100** | 2,15 | 3.777 | 1,63 / 3,76 sn |
+
+Final'in A11 sonucu H7 düzeltmesinden sonradır; düzeltmeden önce task success %97, saldırı direnci %91 idi.
 
 Okuma notları:
 - **Agent'ın katkısı veri gerektiren kararlarda:** B0 politikaların tamamını görüyor; kapsam, güvenlik ve kaynak göstermede Final'le eşit. Ama sipariş verisi olmadan karar doğruluğu %38, uydurma %62: neredeyse her soruya "uygun" diyor.
 - **Retrieval tek başına zararlı olabilir:** B1, B0'dan her alanda kötü. Politikanın 3 parçasını görünce yanlış kuralı uyguluyor ya da var olan siparişe "bulunamadı" diyor; kapsam kuralı getirilmeyince yılan oyunu yazıyor (hata analizi H2, H3, H5).
-- **Bedeli:** Final ~%18 daha fazla token ve ~0,7 sn daha uzun p50 gecikme.
-- **Final'in kendi hatası (A11, dolaylı injection):** Tool cevabındaki ürün kategorisine gizlenen talimatı model uygulamadı ama metni müşteriye aktardı. Savunma prompt'tan koda taşındı (kategori alanı biçim doğrulaması) ve yeniden ölçüldü (hata analizi H7).
+- **Bedeli:** Final ~%17 daha fazla token ve ~0,7 sn daha uzun p50 gecikme.
+- **Final'in kendi hatası (A11, dolaylı injection):** Tool cevabındaki ürün kategorisine gizlenen talimatı model uygulamadı ama metni müşteriye aktardı. Savunma prompt'tan koda taşındı (kategori alanı biçim doğrulaması); yeniden koşuda geçti (hata analizi H7).
 - **Skorlayıcıyı da ölçtük:** İlk koşularda B0 olduğundan kötü görünüyordu; başarısız örnekleri elle okuyunca 4/4'ünün skorlayıcı hatası olduğu çıktı (H6). Tablo düzeltilmiş skorlayıcıyla.
 - **Varyans:** n küçük; sıcaklık 0'da bile metin cevapları koşudan koşuya değişebiliyor. Final'in deterministik katmanları (karar, yetki, yazma) bundan etkilenmez.
 
