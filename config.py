@@ -35,8 +35,15 @@ LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0"))
 # Güvenlik payı için varsayılanlar limitin biraz altında.
 LLM_RPM: int = int(os.getenv("LLM_RPM", "14"))
 LLM_RPD: int = int(os.getenv("LLM_RPD", "480"))
+# Hakem modeli (Gemini 3.8 Flash ücretsiz katman: 5 RPM / 20 RPD)
+JUDGE_RPM: int = int(os.getenv("JUDGE_RPM", "4"))
+JUDGE_RPD: int = int(os.getenv("JUDGE_RPD", "19"))
 
-EMBED_MODEL: str = "intfloat/multilingual-e5-small"  # [Ref: ShopOps §8 Adım 4]
+# [Ref: ShopOps §8 Adım 4]. Deploy'da bellek yetmezse "trigram-hash-4096" (bağımlılıksız yedek).
+EMBED_MODEL: str = os.getenv("SHOPOPS_EMBEDDER", "intfloat/multilingual-e5-small")
+
+# Herkese açık demoda bir oturumun harcayabileceği en fazla mesaj (ortak ücretsiz kotayı korur)
+DEMO_MAX_MESSAGES_PER_SESSION: int = int(os.getenv("DEMO_MAX_MESSAGES", "15"))
 
 # --- Agent döngüsü koruması [Ref: ShopOps §6.2 G10] ---------------------------
 MAX_STEPS: int = 8

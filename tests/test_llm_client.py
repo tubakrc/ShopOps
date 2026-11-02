@@ -148,3 +148,40 @@ def test_log_has_no_content_or_raw_ids(caplog):
     assert not re.search(r"\b[0-9a-f]{32}\b", text)  # G6 test kriteri
     record = json.loads(caplog.records[0].getMessage())
     assert record["prompt_tokens"] == 12 and "latency_s" in record
+
+
+def test_cache_hit_reports_original_latency():
+    t = CountingTransport([fake_raw()])
+    client, _ = make_client(t)
+    first = client.chat(MSG)
+    second = client.chat(MSG)
+    assert second.cache_hit and second.latency_s == first.latency_s
+
+
+def test_refresh_cache_calls_again_and_overwrites():
+    t = CountingTransport([fake_raw("eski"), fake_raw("yeni")])
+    client, clock = make_client(t)
+    client.chat(MSG)
+    clock2 = FakeClock()
+    store = client.store
+    refresher = LLMClient("gemini", "m", 0.0, store, RateLimiter(60, 100, store, "m", clock=clock2,
+                          sleep=clock2.sleep), t, refresh_cache=True)
+    assert refresher.chat(MSG).content == "yeni" and t.calls == 2
+    assert client.chat(MSG).content == "yeni" and t.calls == 2  # normal istemci yeni kaydı okur
+
+
+class ServerErr(Exception):
+    status_code = 500
+
+
+def test_transient_500_is_retried_once():
+    t = CountingTransport([ServerErr("Internal error"), fake_raw("tamam")])
+    client, clock = make_client(t, backoff_s=5)
+    assert client.chat(MSG).content == "tamam" and t.calls == 2
+
+
+def test_persistent_500_is_llm_error_not_quota():
+    client, _ = make_client(CountingTransport([ServerErr("Internal error")]), max_retries_on_429=1)
+    with pytest.raises(LLMError) as exc:
+        client.chat(MSG)
+    assert not isinstance(exc.value, QuotaExhausted)

@@ -75,6 +75,9 @@ class Tracer:
             "prompt_tokens": sum(e["prompt_tokens"] for e in llm),
             "completion_tokens": sum(e["completion_tokens"] for e in llm),
             "llm_latency_s": round(sum(e["latency_s"] for e in llm), 3),
+            # Hız sınırlayıcı beklemesi hariç: LLM + tool süresi (karşılaştırma için bu kullanılır)
+            "work_latency_s": round(sum(e["latency_s"] for e in self.events
+                                        if e["type"] in {"llm", "tool"}), 3),
             "total_latency_s": round(time.perf_counter() - self._started, 3),
             "stopped_reason": stopped_reason,
         }

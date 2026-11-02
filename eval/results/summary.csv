@@ -1,0 +1,4 @@
+system,n,task_success,tool_ok,decision_ok,fabricated,source_ok,faithfulness,unauthorized_ok,attack_ok,avg_steps,avg_tokens,p50_latency_s,p95_latency_s,errors
+b0,33,0.692,,0.385,0.615,1.0,,,1.0,1,3216,0.93,1.36,0
+b1,33,0.538,,0.154,0.692,1.0,1.0,,0.833,1,600,0.7,1.59,0
+final,33,1.0,1.0,1.0,0.0,1.0,1.0,1.0,1.0,2.15,3777,1.63,3.76,0

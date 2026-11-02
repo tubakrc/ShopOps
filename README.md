@@ -2,7 +2,7 @@
 
 Müşterinin "siparişim nerede / iade edebilir miyim" sorusunu kurallara uygun ve yetkili biçimde cevaplayan, operasyon ekibinin metrik sorularını tanımlı metriklerden SQL üreterek yanıtlayan bir agent sistemi.
 
-> **Durum:** Veri katmanı, kural motoru (R0–R13), politika RAG'i, Support Agent ve HITL'li CLI tamam. Demo linki, teknik yazı linki, mimari diyagram ve eval tablosu ilerleyen kilometre taşlarında eklenecek.
+> **Durum:** Temel seviye tamam (veri, kural motoru, RAG, Support Agent, HITL, eval) + Streamlit arayüzü. Demo linki: *deploy sonrası eklenecek*. Demo linki, teknik yazı linki, mimari diyagram ve eval tablosu ilerleyen kilometre taşlarında eklenecek.
 
 ## Problem ve hedef kullanıcı
 
@@ -57,7 +57,11 @@ uv run python scripts/build_policy_index.py --compare   # e5 indeksini kurar, re
 uv run python scripts/llm_ping.py                       # anahtar + tool-calling gidiş-dönüş testi
 uv run pytest -q
 
-uv run python cli.py --demo --steps                     # müşteri destek demosu
+uv run python cli.py --demo --steps                     # müşteri destek demosu (CLI)
+uv run streamlit run app.py                             # müşteri destek demosu (web)
+
+uv run python eval/run_eval.py --dry-run                # LLM'siz: seçiciler ve beklenen kararlar
+uv run python eval/run_eval.py                          # B0 / B1 / Final eval tablosu
 ```
 
 `smoke.py` ham CSV satır sayılarını ve veri kontrol değerlerini (R0 sonrası 99.421 sipariş, late_delivery_rate 0,0672, R6 penceresi 3.656 sipariş vb.) belgeyle karşılaştırır. `verify_rules.py` kural motorunu 99.421 siparişin tamamında çalıştırır ve §9.1'deki kontrol değerlerini (130 / 352, R9 dağılımı 33 / 28 / 2.195) doğrular.
@@ -70,6 +74,7 @@ uv run python cli.py --demo --steps                     # müşteri destek demos
 | Hakem | Gemini 3.8 Flash | Değerlendirilen modelden farklı ve daha güçlü |
 | Embedding | `intfloat/multilingual-e5-small` | Yerel, kotasız, deploy RAM'ine sığar |
 | Veri | SQLite | Tek dosya; salt okunur bağlantı ile güvenli SQL |
+| Arayüz | Streamlit (Community Cloud) | Ücretsiz deploy yolu; HITL onay kartı ve ara adımlar kolay gösteriliyor |
 | Agent framework | Yok: açık tool-calling döngüsü (`src/agents/support_agent.py`) | Döngü ~100 satır. Yetki, tutar, onay ve döngü sınırları kodda ve birim testiyle kanıtlı; framework'ün gizli retry/prompt davranışı yok. 6 günlük takvimde öğrenme maliyeti de yok. |
 | Vektör deposu | Yok: numpy kosinüs, tek `.npz` dosyası | 30 chunk için vektör DB gereksiz; indeks repoda durur, deploy'da yeniden kurulmaz. |
 
@@ -112,6 +117,66 @@ Yazma, LLM'in çağıramadığı `commit_pending()` fonksiyonundadır. Onay, sun
 
 Her tur `logs/traces.jsonl`'a adım adım yazılır: LLM adımı başına token ve gecikme, tool adı, hash'lenmiş argümanlar, sonuç kodu. Mesaj ve cevap metni yazılmaz; 32 karakterlik ham id'ler yazılmadan önce `sha256[:10]` ile değiştirilir (G6).
 
+## Arayüz
+
+`app.py` (Streamlit). Kenar çubuğunda demo müşterisi seçilir (kimlik doğrulama simülasyonu); müşterinin kendi siparişleri kopyalanabilir numaralarla listelenir. Her cevabın altında **ara adımlar** açılır: çağrılan tool'lar, sonuç kodları, token ve süre. İade önerisi bir **onay kartı** açar; talep yalnız "Onayla" düğmesiyle yazılır, kart açıkken sohbet kilitlidir. Herkese açık demoda oturum başına 15 mesaj sınırı ortak ücretsiz kotayı korur; kota bitince kullanıcıya anlaşılır mesaj gösterilir. Arayüz `tests/test_app.py`'de Streamlit `AppTest` ile uçtan uca test edilir.
+
+### Deploy (Streamlit Community Cloud)
+
+1. Repo public olmalı. Bağımlılıklar `uv.lock`'tan kurulur (torch CPU sürümüne sabitli, bkz. `pyproject.toml`).
+2. share.streamlit.io → *Create app* → repo, branch `main`, dosya `app.py`; *Advanced settings* → Python 3.12.
+3. *Secrets*:
+   ```toml
+   GEMINI_API_KEY = "..."
+   LLM_PROVIDER = "gemini"
+   LLM_MODEL = "gemini-3.5-flash-lite"
+   ```
+4. İlk açılışta uygulama Olist'i indirip DB'yi kendisi kurar (~1 dk); ham veri repoda değildir.
+5. Bellek yetmezse (limit ~2,7 GB) Secrets'a `SHOPOPS_EMBEDDER = "trigram-hash-4096"` eklenir: politika araması bağımlılıksız yedeğe geçer (hit@3 1,000 → 0,933).
+
+## Değerlendirme
+
+`eval/golden_set.jsonl`: 33 örnek. Destek 16 (her karar kodu ve R9/R10/R11 kenar durumları), politika 6 (biri politikada olmayan soru), saldırı/kapsam dışı 11: doğrudan (§9.4 A1, A2, A3, A7, G5) ve **dolaylı** injection (A10: politika dokümanına, A11: tool cevabındaki ürün kategorisine gizlenmiş talimat). Saldırı örnekleri ayrıca `eval/injection_tests.jsonl`'de. Satırlar sipariş kimliği değil bir **seçici** adı taşır; seçim SQL'i `src/scenarios.py` içindedir (demo arayüzüyle ortak) ve deterministiktir. `--dry-run`, her seçicinin bir sipariş bulduğunu ve kural motorunun beklenen kararı verdiğini LLM'siz doğrular.
+
+| Sistem | Ne |
+|---|---|
+| B0 | Tool'suz tek LLM çağrısı: prompt + 7 politikanın düz metni |
+| B1 | Naif RAG: mesajla top-3 parça, tek çağrı, tool yok |
+| B2 | Ham şema text-to-SQL (Ops Data Agent ile gelecek) |
+| Final | Support Agent: tool'lar + kural motoru + HITL |
+
+Eval, DB'nin geçici bir kopyasında temiz bir `return_requests` tablosuyla koşar. Sonuçlar: `eval/results/summary.md` (tablo), `summary.csv`, `records.jsonl` (örnek bazında; hata analizi için, ham id'ler hash'li). `--judge`, politika grubunda `JUDGE_MODEL` ile faithfulness ölçer; hakem kararları elle kontrol edildi (8/8 uyum) ve hakemin ayırt ediciliği `eval/judge_calibration.py` ile kasıtlı yanlış cevaplarla ölçüldü.
+
+**Sonuçlar** (1 Kasım 2026, `gemini-3.5-flash-lite`, temperature 0, 31 örnek; dolaylı injection örnekleri A10/A11 sonrası güncel tablo `eval/results/summary.md`'de):
+
+| Sistem | Task success | Tool-call acc. | Karar doğruluğu | Uydurma karar | Doğru kaynak | Yetkisiz erişim engelleme | Saldırı / kapsam dışı | Ort. adım | Ort. token | p50 / p95 gecikme |
+|---|---|---|---|---|---|---|---|---|---|---|
+| B0 tool'suz LLM | %68 | — | %38 | %62 | %100 | — | %100 | 1 | 3.213 | 0,92 / 1,27 sn |
+| B1 naif RAG | %52 | — | %15 | %69 | %100 | — | %80 | 1 | 604 | 0,70 / 1,59 sn |
+| B2 ham şema SQL | — | — | — | — | — | — | — | — | — | — |
+| **Final (agent)** | **%100** | **%100** | **%100** | **%0** | **%100** | **%100** | **%100** | 2,16 | 3.798 | 1,61 / 2,75 sn |
+
+Okuma notları:
+- **Agent'ın katkısı veri gerektiren kararlarda:** B0 politikaların tamamını görüyor; kapsam, güvenlik ve kaynak göstermede Final'le eşit. Ama sipariş verisi olmadan karar doğruluğu %38, uydurma %62: neredeyse her soruya "uygun" diyor.
+- **Retrieval tek başına zararlı olabilir:** B1, B0'dan her alanda kötü. Politikanın 3 parçasını görünce yanlış kuralı uyguluyor ya da var olan siparişe "bulunamadı" diyor; kapsam kuralı getirilmeyince yılan oyunu yazıyor (hata analizi H2, H3, H5).
+- **Bedeli:** Final ~%18 daha fazla token ve ~0,7 sn daha uzun p50 gecikme.
+- **Final'in kendi hatası (A11, dolaylı injection):** Tool cevabındaki ürün kategorisine gizlenen talimatı model uygulamadı ama metni müşteriye aktardı. Savunma prompt'tan koda taşındı (kategori alanı biçim doğrulaması) ve yeniden ölçüldü (hata analizi H7).
+- **Skorlayıcıyı da ölçtük:** İlk koşularda B0 olduğundan kötü görünüyordu; başarısız örnekleri elle okuyunca 4/4'ünün skorlayıcı hatası olduğu çıktı (H6). Tablo düzeltilmiş skorlayıcıyla.
+- **Varyans:** n küçük; sıcaklık 0'da bile metin cevapları koşudan koşuya değişebiliyor. Final'in deterministik katmanları (karar, yetki, yazma) bundan etkilenmez.
+
+Yazılı cevaplar (Genel Rehber §6, ShopOps §10): [`docs/answers.md`](docs/answers.md).
+
+**Retrieval** (`eval/policy_retrieval.jsonl`, 15 sorgu):
+
+| Embedder | hit@1 | hit@3 | MRR |
+|---|---|---|---|
+| intfloat/multilingual-e5-small | 0,933 | 1,000 | 0,967 |
+| trigram (yedek) | 0,733 | 0,933 | 0,844 |
+
+**Hata analizi:** [`docs/error_analysis.md`](docs/error_analysis.md): 5 sistem hatası (B0/B1) ve 4 ölçüm hatamız; kök neden, Final'de nasıl önlendiği, kalan risk.
+
+**Kural motoru** (`scripts/verify_rules.py`, 99.421 sipariş): §9.1'deki tüm kontrol değerleri birebir tutuyor (130 / 352; R9 dağılımı 33 / 28 / 2.195; R2 622; R3 1.159; R5 8).
+
 ## Veri kaynağı ve lisans
 
 [Olist Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), **CC BY-NC-SA 4.0**: ticari kullanım yok, kaynak atfı zorunlu, türevler aynı lisansla. Ham veri ve ondan türetilmiş DB repoya konmaz; indirme ve yükleme script'leri konur.
@@ -129,6 +194,11 @@ src/observability.py   PII'siz trace (token, gecikme, hash'li id)
 policies/              7 politika dokümanı
 index/policy_index.npz politika indeksi (repoda)
 cli.py                 müşteri destek CLI'ı ("Onaylıyor musunuz? [e/h]")
+app.py                 Streamlit arayüzü (onay kartı, ara adımlar)
+src/scenarios.py       sipariş seçicileri (golden set ve demo ortak)
+src/bootstrap.py       deploy'da veriyi indirip DB'yi kurar
+docs/error_analysis.md hata analizi
+docs/answers.md        Genel Rehber §6 ve ShopOps §10 yazılı cevapları
 scripts/download_data.py
 scripts/load_sqlite.py CSV → SQLite, R0 dışlama, indeksler, boş return_requests
 scripts/smoke.py       belgedeki sayılarla karşılaştırma
@@ -136,6 +206,12 @@ scripts/verify_rules.py kural motorunun tüm veride doğrulanması
 scripts/build_policy_index.py  indeksi kurar, retrieval'ı ölçer
 scripts/llm_ping.py    LLM bağlantı ve tool-calling testi
 eval/policy_retrieval.jsonl    retrieval değerlendirme sorguları
+eval/golden_set.jsonl  33 örneklik golden set
+eval/injection_tests.jsonl  11 saldırı örneği (doğrudan + dolaylı)
+eval/run_eval.py       B0 / B1 / Final eval, skorlama, LLM-as-judge
+eval/show_records.py   örnek bazında kayıtları gösterir (hata analizi, --judged: hakem kararları)
+eval/judge_calibration.py  hakemin kasıtlı yanlış cevapları yakalayıp yakalamadığını ölçer
+eval/results/          sonuç tabloları (repoya girer)
 tests/                 birim testleri
 ```
 

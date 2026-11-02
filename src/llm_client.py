@@ -21,6 +21,7 @@ import json
 import logging
 import os
 import sqlite3
+import threading
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -99,7 +100,9 @@ class ResponseStore:
         self.path = Path(path)
         if str(path) != ":memory:":
             self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._con = sqlite3.connect(str(path))
+        # Streamlit her yeniden çalıştırmayı farklı bir thread'de yapar; bağlantı paylaşılır, kilitle korunur.
+        self._con = sqlite3.connect(str(path), check_same_thread=False)
+        self._lock = threading.Lock()
         self._con.executescript(
             """
             CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, response TEXT NOT NULL);
@@ -110,24 +113,26 @@ class ResponseStore:
         )
 
     def get(self, key: str) -> Optional[dict[str, Any]]:
-        row = self._con.execute("SELECT response FROM cache WHERE key = ?", (key,)).fetchone()
+        with self._lock:
+            row = self._con.execute("SELECT response FROM cache WHERE key = ?", (key,)).fetchone()
         return json.loads(row[0]) if row else None
 
     def put(self, key: str, response: dict[str, Any]) -> None:
-        with self._con:
+        with self._lock, self._con:
             self._con.execute(
                 "INSERT OR REPLACE INTO cache (key, response) VALUES (?, ?)",
                 (key, json.dumps(response)),
             )
 
     def requests_today(self, day: str, model: str) -> int:
-        row = self._con.execute(
-            "SELECT requests FROM daily_usage WHERE day = ? AND model = ?", (day, model)
-        ).fetchone()
+        with self._lock:
+            row = self._con.execute(
+                "SELECT requests FROM daily_usage WHERE day = ? AND model = ?", (day, model)
+            ).fetchone()
         return int(row[0]) if row else 0
 
     def increment(self, day: str, model: str) -> None:
-        with self._con:
+        with self._lock, self._con:
             self._con.execute(
                 """INSERT INTO daily_usage (day, model, requests) VALUES (?, ?, 1)
                    ON CONFLICT(day, model) DO UPDATE SET requests = requests + 1""",
@@ -186,6 +191,13 @@ Transport = Callable[[dict[str, Any]], dict[str, Any]]
 
 def _is_rate_limit_error(exc: Exception) -> bool:
     return getattr(exc, "status_code", None) == 429 or "429" in str(exc)
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    """Sağlayıcı tarafı geçici hata (500/502/503/504, InternalServerError)."""
+    code = getattr(exc, "status_code", None)
+    return (isinstance(code, int) and code >= 500) or type(exc).__name__ in {
+        "InternalServerError", "APITimeoutError", "APIConnectionError"}
 
 
 def _openai_transport(provider: str) -> Transport:
@@ -248,6 +260,7 @@ class LLMClient:
         backoff_s: float = 20.0,
         sleep: Callable[[float], None] = time.sleep,
         use_cache: bool = True,
+        refresh_cache: bool = False,
     ) -> None:
         self.provider = provider
         self.model = model
@@ -259,6 +272,8 @@ class LLMClient:
         self.backoff_s = backoff_s
         self.sleep = sleep
         self.use_cache = use_cache and store is not None
+        # refresh_cache: önbellekten okuma, ama yeni cevabı yaz (temiz gecikme ölçümü için)
+        self.refresh_cache = refresh_cache and store is not None
 
     @classmethod
     def from_config(cls, model: Optional[str] = None) -> "LLMClient":
@@ -285,17 +300,19 @@ class LLMClient:
             request["tools"] = tools
 
         key = self._cache_key(request)
-        if self.use_cache:
+        if self.use_cache and not self.refresh_cache:
             cached = self.store.get(key)  # type: ignore[union-attr]
             if cached is not None:
-                resp = self._to_response(cached, latency=0.0, cache_hit=True)
+                # Önbellek, ilk çağrının gerçek gecikmesini de saklar; raporlar 0 sn görmez.
+                resp = self._to_response(cached, latency=float(cached.get("_latency_s", 0.0)),
+                                         cache_hit=True)
                 self._log(key, resp)
                 return resp
 
         raw, latency = self._call_with_retry(request)
         resp = self._to_response(raw, latency=latency, cache_hit=False)
-        if self.use_cache:
-            self.store.put(key, raw)  # type: ignore[union-attr]
+        if self.use_cache or self.refresh_cache:
+            self.store.put(key, {**raw, "_latency_s": round(latency, 3)})  # type: ignore[union-attr]
         self._log(key, resp)
         return resp
 
@@ -308,9 +325,12 @@ class LLMClient:
                 raw = self.transport(request)
                 return raw, time.perf_counter() - started
             except Exception as exc:  # sağlayıcı SDK'ları farklı istisna tipleri fırlatır
-                if not _is_rate_limit_error(exc):
+                transient = _is_transient_error(exc)
+                if not (_is_rate_limit_error(exc) or transient):
                     raise LLMError(f"LLM çağrısı başarısız: {type(exc).__name__}") from exc
                 if attempt == self.max_retries_on_429:
+                    if transient:
+                        raise LLMError(f"LLM çağrısı başarısız: {type(exc).__name__}") from exc
                     raise QuotaExhausted(QUOTA_MESSAGE) from exc
                 self.sleep(self.backoff_s * (attempt + 1))
         raise AssertionError("unreachable")
