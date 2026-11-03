@@ -17,7 +17,7 @@ import streamlit as st
 # Streamlit Cloud'da sırlar st.secrets'ta; config import edilmeden önce ortama aktarılır.
 try:
     for _key in ("GEMINI_API_KEY", "GROQ_API_KEY", "LLM_PROVIDER", "LLM_MODEL", "SHOPOPS_EMBEDDER",
-                 "DEMO_MAX_MESSAGES"):
+                 "DEMO_MAX_MESSAGES", "SHOPOPS_DECOR"):
         if _key in st.secrets and not os.getenv(_key):
             os.environ[_key] = str(st.secrets[_key])
 except Exception:  # secrets.toml yoksa (yerel çalışma) .env kullanılır
@@ -54,20 +54,23 @@ section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div,
 [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
   color: #2B2A26;
 }
-.stButton > button, [data-testid^="stBaseButton"] {
+.stButton > button {
   background-color: #F94915 !important; color: #F9F8F4 !important;
   border: 1px solid #F94915 !important; font-weight: 600;
 }
-.stButton > button:hover, [data-testid^="stBaseButton"]:hover {
+.stButton > button:hover {
   background-color: #DE3D0D !important; border-color: #DE3D0D !important;
 }
-.stButton > button p, [data-testid^="stBaseButton"] p { color: inherit !important; }
+.stButton > button p { color: inherit !important; }
 section[data-testid="stSidebar"] .stButton > button,
 section[data-testid="stSidebar"] .stButton > button p { color: #EFEDE6 !important; }
 [data-testid="stChatInputSubmitButton"] { background-color: #F94915 !important; color: #F9F8F4 !important; }
 </style>
 """
 st.markdown(BRAND_CSS, unsafe_allow_html=True)
+if config.DECOR != "off":
+    from src.decor import garland_html  # noqa: E402
+    st.markdown(garland_html(), unsafe_allow_html=True)
 
 REASON_TR = {"changed_mind": "fikir değişikliği", "damaged": "hasarlı ürün",
              "wrong_item": "yanlış ürün", "late": "geç teslim"}

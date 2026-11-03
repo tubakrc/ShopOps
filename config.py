@@ -42,6 +42,9 @@ JUDGE_RPD: int = int(os.getenv("JUDGE_RPD", "19"))
 # [Ref: ShopOps §8 Adım 4]. Deploy'da bellek yetmezse "trigram-hash-4096" (bağımlılıksız yedek).
 EMBED_MODEL: str = os.getenv("SHOPOPS_EMBEDDER", "intfloat/multilingual-e5-small")
 
+# Arayüz süsü (iple asılı ampuller, balkabağı, noel ağacı): "holiday" | "off"
+DECOR: str = os.getenv("SHOPOPS_DECOR", "holiday").strip().lower()
+
 # Herkese açık demoda bir oturumun harcayabileceği en fazla mesaj (ortak ücretsiz kotayı korur)
 DEMO_MAX_MESSAGES_PER_SESSION: int = int(os.getenv("DEMO_MAX_MESSAGES", "15"))
 
