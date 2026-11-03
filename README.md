@@ -2,7 +2,7 @@
 
 Müşterinin "siparişim nerede / iade edebilir miyim" sorusunu kurallara uygun ve yetkili biçimde cevaplayan, operasyon ekibinin metrik sorularını tanımlı metriklerden SQL üreterek yanıtlayan bir agent sistemi.
 
-> **Canlı demo:** https://shopops.streamlit.app/ · **Teknik yazı:** *[Medium linki eklenecek](https://medium.com/@tubakirca/fba46a188e47?sharedUserId=tubakirca)*
+> **Canlı demo:** https://shopops.streamlit.app/ · **Teknik yazı:** * https://medium.com/@tubakirca/fba46a188e47?sharedUserId=tubakirca *
 >
 > Temel seviye tamam (veri, kural motoru, RAG, Support Agent, HITL, eval) + Streamlit arayüzü. Ücretsiz katmanda çalışır: oturum başına 15 mesaj; uygulama kullanılmazsa uyur, ilk açılış ~1–2 dk sürebilir. Demo linki, teknik yazı linki, mimari diyagram ve eval tablosu ilerleyen kilometre taşlarında eklenecek.
 
