@@ -137,7 +137,7 @@ Her tur `logs/traces.jsonl`'a adım adım yazılır: LLM adımı başına token 
 | B2 | Ham şema text-to-SQL (Ops Data Agent ile gelecek) |
 | Final | Support Agent: tool'lar + kural motoru + HITL |
 
-Eval, DB'nin geçici bir kopyasında temiz bir `return_requests` tablosuyla koşar. Sonuçlar: `eval/results/summary.md` (tablo), `summary.csv`, `records.jsonl` (örnek bazında; hata analizi için, ham id'ler hash'li). `--judge`, politika grubunda `JUDGE_MODEL` ile faithfulness ölçer; hakem kararları elle kontrol edildi (8/8 uyum) ve hakemin ayırt ediciliği `eval/judge_calibration.py` ile kasıtlı yanlış cevaplarla ölçüldü.
+Eval, DB'nin geçici bir kopyasında temiz bir `return_requests` tablosuyla koşar. Sonuçlar: `eval/results/summary.md` (tablo), `summary.csv`, `records.jsonl` (örnek bazında; hata analizi için, ham id'ler hash'li). `--judge`, politika grubunda `JUDGE_MODEL` ile faithfulness ölçer; hakemin 8 kararı elle kontrol edildi (8/8 uyum). Hakemin kasıtlı yanlış cevapları yakalayıp yakalamadığını ölçen `eval/judge_calibration.py` hazır, ancak teslim döneminde hakem modeli (`gemini-3.8-flash`, sürekli 503) ve denenen yedeği (`gemini-3.7-flash`, kota) erişilemediği için koşulamadı; bu bir sınırlama olarak kayıtlı.
 
 **Sonuçlar** (2 Kasım 2026, `gemini-3.5-flash-lite`, temperature 0, 33 örnek; tam tablo `eval/results/summary.md`):
 
@@ -205,7 +205,7 @@ eval/golden_set.jsonl  33 örneklik golden set
 eval/injection_tests.jsonl  11 saldırı örneği (doğrudan + dolaylı)
 eval/run_eval.py       B0 / B1 / Final eval, skorlama, LLM-as-judge
 eval/show_records.py   örnek bazında kayıtları gösterir (hata analizi, --judged: hakem kararları)
-eval/judge_calibration.py  hakemin kasıtlı yanlış cevapları yakalayıp yakalamadığını ölçer
+eval/judge_calibration.py  hakem kalibrasyonu (kasıtlı yanlış cevaplar); teslimde hakem erişilemediği için koşulamadı
 eval/results/          sonuç tabloları (repoya girer)
 tests/                 birim testleri
 ```
