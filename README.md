@@ -6,7 +6,7 @@ Müşterinin "siparişim nerede / iade edebilir miyim" sorusunu kurallara uygun 
 
 ![ShopOps UI](docs/ShopOps2.png)
 
-> **Canlı demo:** https://shopops.streamlit.app/ · **Teknik yazı:** * https://medium.com/@tubakirca/fba46a188e47?sharedUserId=tubakirca *
+> **Canlı demo:** https://shopops.streamlit.app/ · **Teknik yazı:** * https://medium.com/@tubakirca/karar%C4%B1-llme-verdirmeden-agent-kurmak-shopops-fba46a188e47?sharedUserId=tubakirca *
 >
 > Temel seviye tamam (veri, kural motoru, RAG, Support Agent, HITL, eval) + Streamlit arayüzü. Ücretsiz katmanda çalışır: oturum başına 15 mesaj; uygulama kullanılmazsa uyur, ilk açılış ~1–2 dk sürebilir.
 
