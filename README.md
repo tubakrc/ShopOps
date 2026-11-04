@@ -216,4 +216,4 @@ tests/                 birim testleri
 
 ## Yapay zekâ desteği
 
-Bu repoda kod yazımında yapay zekâ asistanı kullanıldı. Mimari kararlar, eval tasarımı ve hata analizi yazara aittir. [Ref: Genel Rehber §11]
+Bu repoda kod yazımında yapay zekâ asistanı kullanıldı. Mimari kararlar, eval tasarımı ve hata analizi yazara aittir.
